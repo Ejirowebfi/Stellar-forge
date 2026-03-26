@@ -5,6 +5,7 @@ use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation},
     Address, Env, String,
 };
+use proptest::prelude::*;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -210,4 +211,98 @@ fn test_get_tokens_by_creator_different_creators_are_independent() {
     // Neither has tokens — both return empty
     assert_eq!(client.get_tokens_by_creator(&creator_a).len(), 0);
     assert_eq!(client.get_tokens_by_creator(&creator_b).len(), 0);
+}
+
+// ── property-based tests ──────────────────────────────────────────────────────
+
+// 1. create_token: any fee_payment strictly below base_fee returns InsufficientFee.
+//    base_fee is initialised to 1000 in setup_env().
+proptest! {
+    #[test]
+    fn prop_create_token_insufficient_fee(
+        // Generate a fee in [0, 999] — always below the 1000 base_fee.
+        fee_payment in 0_i128..1000_i128,
+    ) {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let contract_id = env.register_contract(None, TokenFactory);
+        let client = TokenFactoryClient::new(&env, &contract_id);
+
+        let admin = Address::generate(&env);
+        let treasury = Address::generate(&env);
+        client.initialize(&admin, &treasury, &1000, &500);
+
+        let creator = Address::generate(&env);
+        let result = client.try_create_token(
+            &creator,
+            &String::from_str(&env, "T"),
+            &String::from_str(&env, "T"),
+            &0,
+            &0,
+            &fee_payment,
+        );
+
+        prop_assert_eq!(result, Err(Ok(Error::InsufficientFee)));
+    }
+}
+
+// 2. burn: any amount <= 0 returns InvalidBurnAmount.
+proptest! {
+    #[test]
+    fn prop_burn_invalid_amount(
+        // i128 values in [-10_000, 0] — zero and all negatives are invalid.
+        amount in i128::MIN..=0_i128,
+    ) {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let contract_id = env.register_contract(None, TokenFactory);
+        let client = TokenFactoryClient::new(&env, &contract_id);
+
+        let admin = Address::generate(&env);
+        let treasury = Address::generate(&env);
+        client.initialize(&admin, &treasury, &1000, &500);
+
+        let token_address = Address::generate(&env);
+        let burner = Address::generate(&env);
+
+        let result = client.try_burn(&token_address, &burner, &amount);
+
+        prop_assert_eq!(result, Err(Ok(Error::InvalidBurnAmount)));
+    }
+}
+
+// 3. update_fees: any caller that is not the admin returns Unauthorized.
+//    We use a u64 seed to derive a deterministic-but-varied non-admin Address
+//    by generating a fresh one per iteration (all generated addresses are unique
+//    and guaranteed != admin).
+proptest! {
+    #[test]
+    fn prop_update_fees_unauthorized(
+        // Arbitrary new fee values — the call should fail before applying them.
+        new_base in 0_i128..1_000_000_i128,
+        new_meta in 0_i128..1_000_000_i128,
+    ) {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let contract_id = env.register_contract(None, TokenFactory);
+        let client = TokenFactoryClient::new(&env, &contract_id);
+
+        let admin = Address::generate(&env);
+        let treasury = Address::generate(&env);
+        client.initialize(&admin, &treasury, &1000, &500);
+
+        // Any freshly generated address is guaranteed != admin.
+        let non_admin = Address::generate(&env);
+
+        let result = client.try_update_fees(
+            &non_admin,
+            &Some(new_base),
+            &Some(new_meta),
+        );
+
+        prop_assert_eq!(result, Err(Ok(Error::Unauthorized)));
+    }
 }
