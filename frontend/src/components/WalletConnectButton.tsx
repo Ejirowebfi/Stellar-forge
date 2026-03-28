@@ -2,6 +2,7 @@ import { useWalletContext } from '../context/WalletContext'
 import { truncateAddress, formatXLM } from '../utils/formatting'
 import { Button } from './UI/Button'
 import { Spinner } from './UI/Spinner'
+import { CopyButton } from './CopyButton'
 
 export const WalletConnectButton: React.FC = () => {
   const { wallet, isConnecting, isInstalled, connect, disconnect } = useWalletContext()
@@ -35,13 +36,11 @@ export const WalletConnectButton: React.FC = () => {
   if (wallet.isConnected && wallet.address) {
     return (
       <div className="inline-flex items-center gap-3">
-        <div className="flex flex-col items-end">
-          <span
-            className="font-mono text-sm text-gray-700 dark:text-gray-300"
-            title={wallet.address}
-          >
-            {truncateAddress(wallet.address)}
-          </span>
+        <div className="flex flex-col items-end gap-1">
+          <div className="inline-flex items-center gap-2 font-mono text-sm text-gray-700 dark:text-gray-300">
+            <span title={wallet.address}>{truncateAddress(wallet.address)}</span>
+            <CopyButton value={wallet.address} ariaLabel="Copy wallet address" className="text-gray-400" />
+          </div>
           {wallet.balance !== undefined ? (
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {formatXLM(wallet.balance)}

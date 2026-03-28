@@ -84,25 +84,30 @@ export const TokenDashboard: React.FC = () => {
                 key={token.address}
                 className="p-3 border rounded text-sm flex items-center justify-between gap-2 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors dark:bg-slate-800 dark:border-slate-700"
               >
-                <Link
-                  to={`/tokens/${token.address}`}
-                  className="flex-1 min-w-0 hover:underline"
-                  title={`View ${token.name} details`}
-                >
-                  <span className="font-medium">{token.name}</span>
-                  <span className="ml-2 text-gray-500 font-mono">({token.symbol})</span>
-                  <div
-                    className="text-xs text-gray-400 mt-0.5 font-mono truncate"
-                    title={token.address}
+                <div className="flex-1 min-w-0">
+                  <Link
+                    to={`/tokens/${token.address}`}
+                    className="block hover:underline"
+                    title={`View ${token.name} details`}
                   >
-                    {formatAddress(token.address)}
-                  </div>
+                    <span className="font-medium">{token.name}</span>
+                    <span className="ml-2 text-gray-500 font-mono">({token.symbol})</span>
+                    <div
+                      className="text-xs text-gray-400 mt-0.5 font-mono truncate"
+                      title={token.address}
+                    >
+                      {formatAddress(token.address)}
+                    </div>
+                  </Link>
                   {token.creator && (
-                    <div className="text-xs text-gray-400 font-mono truncate" title={token.creator}>
-                      Creator: {formatAddress(token.creator)}
+                    <div className="mt-1 inline-flex items-center gap-1 text-xs text-gray-400 font-mono w-full">
+                      <span className="truncate block max-w-full" title={token.creator}>
+                        Creator: {formatAddress(token.creator)}
+                      </span>
+                      <CopyButton value={token.creator} ariaLabel="Copy creator address" className="text-gray-400" />
                     </div>
                   )}
-                </Link>
+                </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <CopyButton value={token.address} ariaLabel="Copy token address" />
                   <a

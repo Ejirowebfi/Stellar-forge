@@ -187,15 +187,18 @@ export const TokenDetail: React.FC = () => {
             <dt className="text-gray-500 dark:text-gray-400">Creator</dt>
             <dd className="flex items-center gap-1 font-mono text-xs break-all text-gray-900 dark:text-gray-100 mt-1">
               {token.creator ? (
-                <a
-                  href={stellarExplorerUrl('account', token.creator, network)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-500 hover:underline"
-                  title={token.creator}
-                >
-                  {formatAddress(token.creator)}
-                </a>
+                <>
+                  <a
+                    href={stellarExplorerUrl('account', token.creator, network)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-500 hover:underline"
+                    title={token.creator}
+                  >
+                    {formatAddress(token.creator)}
+                  </a>
+                  <CopyButton value={token.creator} ariaLabel="Copy creator address" className="text-gray-400" />
+                </>
               ) : '—'}
             </dd>
           </div>

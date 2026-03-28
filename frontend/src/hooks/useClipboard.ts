@@ -9,44 +9,43 @@ export const useClipboard = (resetDelay = 2000) => {
   const [copied, setCopied] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const fallbackCopy = (text: string) => {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-9999px'
+    textArea.style.top = '0'
+    document.body.appendChild(textArea)
+
+    textArea.focus()
+    textArea.select()
+
+    const successful = document.execCommand?.('copy')
+    document.body.removeChild(textArea)
+
+    return Boolean(successful)
+  }
+
   const copy = useCallback(
     async (text: string) => {
       if (!text) return
 
       try {
-        // Clear any existing timeout
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current)
         }
 
-        // Try modern navigator.clipboard API first
+        let copiedSuccessfully = false
+
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(text)
-          setCopied(true)
-        } else {
-          // Fallback to execCommand for older browsers or non-secure contexts
-          const textArea = document.createElement('textarea')
-          textArea.value = text
-
-          // Ensure textarea is not visible but part of DOM
-          textArea.style.position = 'fixed'
-          textArea.style.left = '-9999px'
-          textArea.style.top = '0'
-          document.body.appendChild(textArea)
-
-          textArea.focus()
-          textArea.select()
-
-          const successful = document.execCommand('copy')
-          document.body.removeChild(textArea)
-
-          if (successful) {
-            setCopied(true)
-          }
-          // Fallback copy silently failed — nothing to surface to the user
+          copiedSuccessfully = true
+        } else if (typeof document !== 'undefined') {
+          copiedSuccessfully = fallbackCopy(text)
         }
 
-        // Reset copied state after delay
+        setCopied(copiedSuccessfully)
+
         timeoutRef.current = setTimeout(() => {
           setCopied(false)
           timeoutRef.current = null

@@ -11,6 +11,7 @@ import { StellarProvider } from './context/StellarContext'
 import { NetworkSwitcher } from './components/NetworkSwitcher'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { FundbotButton } from './components/FundbotButton'
+import { CopyButton } from './components/CopyButton'
 import { useWallet } from './hooks/useWallet'
 import { truncateAddress, formatXLM } from './utils/formatting'
 import { NavBar } from './components/NavBar'
@@ -124,11 +125,9 @@ function AppContent() {
                   <div className="flex items-center gap-3">
                     <FundbotButton />
                     <div className="text-right">
-                      <div
-                        className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                        title={wallet.address ?? undefined}
-                      >
-                        {wallet.address && truncateAddress(wallet.address)}
+                      <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <span title={wallet.address ?? undefined}>{wallet.address && truncateAddress(wallet.address)}</span>
+                        {wallet.address && <CopyButton value={wallet.address} ariaLabel="Copy wallet address" className="text-gray-400" />}
                       </div>
                       <Button onClick={handleDisconnect} variant="secondary" size="sm">
                         {t('wallet.disconnect')}
@@ -152,7 +151,10 @@ function AppContent() {
 
             {wallet.isConnected && wallet.address && (
               <div className="sm:hidden text-xs text-gray-600 dark:text-gray-400 truncate" title={wallet.address}>
-                {truncateAddress(wallet.address)}
+                <div className="inline-flex items-center gap-2">
+                  <span>{truncateAddress(wallet.address)}</span>
+                  <CopyButton value={wallet.address} ariaLabel="Copy wallet address" className="text-gray-400" />
+                </div>
                 {wallet.balance && <span className="ml-2">{formatXLM(wallet.balance)}</span>}
               </div>
             )}
