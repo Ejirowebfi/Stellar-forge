@@ -80,7 +80,9 @@ pub enum Error {
     StateNotFound = 13,
     InvalidTokenParams = 14,
     InvalidDecimals = 15,
+    /// Mint would exceed the token's max supply cap
     MaxSupplyExceeded = 16,
+    /// Fee split basis points do not sum to 10_000
     InvalidFeeSplit = 17,
 }
 
@@ -255,7 +257,6 @@ impl TokenFactory {
 
         let token_name = name.clone();
         let token_symbol = symbol.clone();
-
         env.storage().instance().set(&DataKey::TokenInfo(index), &TokenInfo {
             name,
             symbol,
@@ -433,6 +434,10 @@ impl TokenFactory {
             .get(&(&token_address, symbol_short!("owner")))
             .ok_or(Error::TokenNotFound)?;
 
+        // Verify admin is the token creator using direct mapping
+        let creator: Address = env.storage().instance().get(&(&token_address, symbol_short!("owner")))
+            .ok_or(Error::TokenNotFound)?;
+
         if creator != admin {
             return Err(Error::Unauthorized);
         }
@@ -475,17 +480,7 @@ impl TokenFactory {
             return Err(Error::InsufficientFee);
         }
 
-        let creator: Address = env
-            .storage()
-            .instance()
-            .get(&(&token_address, symbol_short!("owner")))
-            .ok_or(Error::TokenNotFound)?;
-
-        if creator != admin {
-            return Err(Error::Unauthorized);
-        }
-
-        // Enforce max supply cap if set
+        // Fetch token index and verify creator authorization
         let index: u32 = env
             .storage()
             .instance()
@@ -497,6 +492,14 @@ impl TokenFactory {
             .instance()
             .get(&DataKey::TokenInfo(index))
             .ok_or(Error::TokenNotFound)?;
+
+        // Verify admin is the token creator using direct mapping
+        let creator: Address = env.storage().instance().get(&(&token_address, symbol_short!("owner")))
+            .ok_or(Error::TokenNotFound)?;
+
+        if creator != admin {
+            return Err(Error::Unauthorized);
+        }
 
         if let Some(cap) = token_info.max_supply {
             let current = token::TokenClient::new(&env, &token_address).total_supply();
