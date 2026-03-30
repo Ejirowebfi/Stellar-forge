@@ -4,7 +4,7 @@ import { Input, Button } from './UI'
 import { useToast } from '../context/ToastContext'
 import { ipfsService } from '../services/ipfs'
 import { isIpfsConfigured } from '../config/env'
-import { isValidImageFile } from '../utils/validation'
+import { DropZone } from './DropZone'
 
 interface MetadataUploadFormProps {
   onUploadComplete: (metadataUri: string) => void
@@ -26,16 +26,7 @@ export const MetadataUploadForm: React.FC<MetadataUploadFormProps> = ({
 
   const ipfsReady = isIpfsConfigured()
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const validation = isValidImageFile(file)
-    if (!validation.valid) {
-      addToast(validation.error || 'Invalid image file', 'error')
-      return
-    }
-
+  const handleImageSelect = (file: File) => {
     setImageFile(file)
   }
 
@@ -130,28 +121,14 @@ export const MetadataUploadForm: React.FC<MetadataUploadFormProps> = ({
       </div>
 
       <div>
-        <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Token Image (JPEG, PNG, GIF - max 5MB)
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Token Image (JPEG, PNG, GIF — max 5MB)
         </label>
-        <input
-          id="image"
-          type="file"
-          accept="image/jpeg,image/png,image/gif"
-          onChange={handleImageChange}
-          disabled={isUploading || isLoading}
-          className="block w-full text-sm text-gray-500 dark:text-gray-400
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-md file:border-0
-            file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-blue-700
-            dark:file:bg-blue-900/30 dark:file:text-blue-300
-            hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
+        <DropZone
+          onFileSelect={handleImageSelect}
+          acceptedTypes={['image/jpeg', 'image/png', 'image/gif']}
+          maxSizeMB={5}
         />
-        {imageFile && (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Selected: {imageFile.name}
-          </p>
-        )}
       </div>
 
       {isUploading && (
