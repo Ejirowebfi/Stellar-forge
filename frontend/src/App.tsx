@@ -17,14 +17,17 @@ import { useWallet } from './hooks/useWallet'
 import { truncateAddress, formatXLM } from './utils/formatting'
 import { NavBar } from './components/NavBar'
 import { Home } from './components/Home'
-import { CreateToken } from './components/CreateToken'
-import { MintForm } from './components/MintForm'
-import { BurnForm } from './components/BurnForm'
-import { TokenDashboard } from './components/TokenDashboard'
-import { TokenDetail } from './components/TokenDetail'
-import { TokenExplorer } from './components/TokenExplorer'
-import { FAQ } from './components/FAQ'
-import { AdminPanel } from './components/AdminPanel'
+import {
+  LazyTokenDashboard,
+  LazyTokenDetail,
+  LazyCreateToken,
+  LazyMintForm,
+  LazyBurnForm,
+  LazyAdminPanel,
+  LazyTokenExplorer,
+  LazyFAQ,
+  LazyRouteWrapper,
+} from './components/LazyComponents'
 import { useFactoryState } from './hooks/useFactoryState'
 import { isFactoryConfigured } from './config/env'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -185,7 +188,9 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <ErrorBoundary>
-                        <CreateToken />
+                        <LazyRouteWrapper>
+                          <LazyCreateToken />
+                        </LazyRouteWrapper>
                       </ErrorBoundary>
                     </ProtectedRoute>
                   }
@@ -195,7 +200,9 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <ErrorBoundary>
-                        <MintForm />
+                        <LazyRouteWrapper>
+                          <LazyMintForm />
+                        </LazyRouteWrapper>
                       </ErrorBoundary>
                     </ProtectedRoute>
                   }
@@ -205,7 +212,9 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <ErrorBoundary>
-                        <BurnForm />
+                        <LazyRouteWrapper>
+                          <LazyBurnForm />
+                        </LazyRouteWrapper>
                       </ErrorBoundary>
                     </ProtectedRoute>
                   }
@@ -215,7 +224,9 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <ErrorBoundary>
-                        <TokenDashboard />
+                        <LazyRouteWrapper>
+                          <LazyTokenDashboard />
+                        </LazyRouteWrapper>
                       </ErrorBoundary>
                     </ProtectedRoute>
                   }
@@ -225,7 +236,9 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <ErrorBoundary>
-                        <TokenDetail />
+                        <LazyRouteWrapper>
+                          <LazyTokenDetail />
+                        </LazyRouteWrapper>
                       </ErrorBoundary>
                     </ProtectedRoute>
                   }
@@ -234,7 +247,9 @@ function AppContent() {
                   path="/explorer"
                   element={
                     <ErrorBoundary>
-                      <TokenExplorer />
+                      <LazyRouteWrapper>
+                        <LazyTokenExplorer />
+                      </LazyRouteWrapper>
                     </ErrorBoundary>
                   }
                 />
@@ -243,7 +258,9 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <ErrorBoundary>
-                        <AdminPanel />
+                        <LazyRouteWrapper>
+                          <LazyAdminPanel />
+                        </LazyRouteWrapper>
                       </ErrorBoundary>
                     </ProtectedRoute>
                   }
