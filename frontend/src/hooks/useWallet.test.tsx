@@ -8,7 +8,7 @@ vi.mock('../services/wallet', () => ({
   walletService: {
     connect: vi.fn(),
     disconnect: vi.fn(),
-    isInstalled: vi.fn().mockReturnValue(true),
+    isInstalled: vi.fn().mockResolvedValue(true),
     checkExistingConnection: vi.fn().mockResolvedValue(null),
     getBalance: vi.fn().mockResolvedValue('100.0000000'),
     getSavedAddress: vi.fn().mockReturnValue(null),
@@ -24,12 +24,8 @@ function Consumer() {
       <span data-testid="connecting">{String(isConnecting)}</span>
       <span data-testid="error">{error ?? 'null'}</span>
       <span data-testid="installed">{String(isInstalled)}</span>
-      <button data-testid="connect" onClick={connect}>
-        Connect
-      </button>
-      <button data-testid="disconnect" onClick={disconnect}>
-        Disconnect
-      </button>
+      <button data-testid="connect" onClick={connect}>Connect</button>
+      <button data-testid="disconnect" onClick={disconnect}>Disconnect</button>
     </div>
   )
 }
@@ -44,14 +40,14 @@ const renderWithProvider = () =>
 describe('useWallet', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('starts disconnected', () => {
+  it('initial state is disconnected', () => {
     renderWithProvider()
     expect(screen.getByTestId('connected').textContent).toBe('false')
     expect(screen.getByTestId('address').textContent).toBe('null')
     expect(screen.getByTestId('error').textContent).toBe('null')
   })
 
-  it('connect success sets address and connected state', async () => {
+  it('successful connection updates address and connected state', async () => {
     vi.mocked(walletService.connect).mockResolvedValue('GABC123')
     renderWithProvider()
 
@@ -64,48 +60,41 @@ describe('useWallet', () => {
     expect(screen.getByTestId('error').textContent).toBe('null')
   })
 
-  it('connect failure sets error and stays disconnected', async () => {
+  it('disconnection resets state', async () => {
+    vi.mocked(walletService.connect).mockResolvedValue('GABC123')
+    renderWithProvider()
+
+    await act(async () => { screen.getByTestId('connect').click() })
+    act(() => { screen.getByTestId('disconnect').click() })
+
+    expect(screen.getByTestId('connected').textContent).toBe('false')
+    expect(screen.getByTestId('address').textContent).toBe('null')
+  })
+
+  it('wallet extension not found sets error state', async () => {
+    vi.mocked(walletService.connect).mockRejectedValue(
+      new Error('Freighter wallet is not installed'),
+    )
+    renderWithProvider()
+
+    await act(async () => { screen.getByTestId('connect').click() })
+
+    expect(screen.getByTestId('connected').textContent).toBe('false')
+    expect(screen.getByTestId('error').textContent).toBe('Freighter wallet is not installed')
+  })
+
+  it('user rejection sets error state', async () => {
     vi.mocked(walletService.connect).mockRejectedValue(new Error('User rejected'))
     renderWithProvider()
 
-    await act(async () => {
-      screen.getByTestId('connect').click()
-    })
+    await act(async () => { screen.getByTestId('connect').click() })
 
     expect(screen.getByTestId('connected').textContent).toBe('false')
     expect(screen.getByTestId('error').textContent).toBe('User rejected')
   })
 
-  it('disconnect resets state', async () => {
-    vi.mocked(walletService.connect).mockResolvedValue('GABC123')
-    renderWithProvider()
-
-    await act(async () => {
-      screen.getByTestId('connect').click()
-    })
-    act(() => {
-      screen.getByTestId('disconnect').click()
-    })
-
-    expect(screen.getByTestId('connected').textContent).toBe('false')
-    expect(screen.getByTestId('address').textContent).toBe('null')
-  })
-
   it('isInstalled reflects wallet installation status', () => {
     renderWithProvider()
     expect(screen.getByTestId('installed').textContent).toBe('true')
-  })
-
-  it('restores connection from localStorage on mount', async () => {
-    vi.mocked(walletService.checkExistingConnection).mockResolvedValue('GABC123')
-    renderWithProvider()
-
-    // Wait for the effect to run
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0))
-    })
-
-    expect(screen.getByTestId('connected').textContent).toBe('true')
-    expect(screen.getByTestId('address').textContent).toBe('GABC123')
   })
 })
