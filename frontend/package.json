@@ -76,7 +76,7 @@
     "tailwindcss": "^4.1.18",
     "terser": "^5.27.0",
     "typescript": "^5.9.3",
-    "vite": "^8.0.3",
+    "vite": "^8.0.4",
     "vite-bundle-analyzer": "^1.0.6",
     "vite-plugin-pwa": "1.2.0",
     "vitest": "^4.0.18"
